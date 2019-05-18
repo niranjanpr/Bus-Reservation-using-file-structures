@@ -1,0 +1,8 @@
+blrre88888|virat|123|3/3/2019|chennai|delhi|5000|8748811023
+blrre12345|ram|123|4/4/2019|mangalore|bangalore|1200|9019306765
+**********|suresh|kris|3/3/2019|uthr|kengeri|20|8908908900
+blrre99999|ishan|89|9/9/2019|hyderabad|bangalore|1200|8908900988
+blrre54321|jayanth|123|5/5/2019|gurgaun|delhi|3400|8989787868
+blrre10001|raju|123|20/05/2019|bengaluru|mangaluru|1200|9019306765
+blrre78787|umesh|178|9/9/2019|yelehanka|mysuru|120|9090909090
+
