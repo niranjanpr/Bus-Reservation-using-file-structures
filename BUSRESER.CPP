@@ -8,8 +8,24 @@
 #include<dos.h>
 #include<ctype.h>
 
-fstream fp,fp1;
-int recount=0,ud=0;
+fstream fp,fp1,fp2,fp3;
+
+int getrecount(){
+	int re;
+	fp1.open("count.txt",ios::in);
+	fp1>>re;
+	fp1.close();
+	remove("count.txt");
+	return re;
+}
+
+void uploadrecount(int re){
+	fp1.open("count.txt",ios::out);
+	fp1<<re;
+	fp1.close();
+}
+int recount=getrecount();
+
 char fname[10]="inp.txt";
 
 class bus
@@ -19,7 +35,7 @@ class bus
 		char pas[15];
 		 char cname[30];
 		 char busid[4];
-		 char date[10];
+		 char date[20];
 		 char src[20];
 		 char dest[20];
 		 char cost[6];
@@ -32,7 +48,9 @@ class bus
 		void del();
 		int search(char[]);
 		void update();
+	   
 };
+
 bus b;
 
 struct memindex
@@ -41,14 +59,35 @@ struct memindex
 	int o;
 };
 memindex in[50];
+void setmemindex(){
+	char buffer[10];
+	fp2.open("memindexes.txt",ios::out);
+	fp3.open("offset.txt",ios::out);
+	for(int i=1;i<=recount;i++){
+		
+		fp2<<in[i].k;
+		fp2<<"\n";
+		
+		fp3<<in[i].o<<endl;
+	}
+	fp2.close();
+	fp3.close();
+}
+void getmemindex(){
+	char buffer[20];
+	fp3.open("offset.txt",ios::in);
+	fp2.open("memindex.txt",ios::in);
+	for(int i=1;i<=recount;i++){
+		fp2>>in[i].k;
+		
+		fp3>>in[i].o;
+	}
+	fp3.close();
+	fp2.close();
+	remove("offset.txt");
+	remove("memindex.txt");
+}
 
-
-struct secondaryindex
-{
-char sk[15];
-char k[15];
-};
-secondaryindex sin[50];
 
 
 int isAlpha(char ch)
@@ -59,12 +98,11 @@ int isAlpha(char ch)
 	    return 0;
 }
 
-
 void bus::pack(char buffer[])
 {	int valid=1;
 
 	get_bid:
-		cout<<endl<<"\tBooking ID :\t\t";cin>>bid;
+		cout<<endl<<"\t\t  Booking ID  \t\t: ";cin>>bid;
 		valid=1;
 		if(((strlen(bid)==10)&&isalpha(bid[0]))&&(isalpha(bid[1]))&&(isalpha(bid[2]))&&(isalpha(bid[3]))&&(isalpha(bid[4]))&&(isdigit(bid[5]))&&(isdigit(bid[6]))&&(isdigit(bid[7]))&&(isdigit(bid[8]))&&(isdigit(bid[9]))&&(bid[9]>=0)&&(bid[7]>=0))
 			valid=1;
@@ -74,7 +112,7 @@ void bus::pack(char buffer[])
 
 
 	get_pas:
-		cout<<endl<<"\tName:\t\t\t"; cin>>pas;
+		cout<<endl<<"\t\t  Name     \t\t: "; cin>>pas;
 		valid=1;
 		for(int i=0;i<strlen(pas);i++)
 		if(isAlpha(pas[i])==0)
@@ -85,23 +123,23 @@ void bus::pack(char buffer[])
 	if(valid==0)
 		{cout<<endl<<" INVALID NAME "<<endl;goto get_pas;}
 
-	cout<<endl<<"\tenter Busid:\t\t";
+	cout<<endl<<"\t\t  enter the Busid\t: ";
 	cin>>busid;
-	cout<<endl<<"\tenter the date:\t\t";
+	cout<<endl<<"\t\t  enter the date\t: ";
 	cin>>date;
-	cout<<endl<<"\tenter source:\t\t";
+	cout<<endl<<"\t\t  enter source\t\t: ";
 	cin>>src;
-	cout<<endl<<"\tenter destination:\t";
+	cout<<endl<<"\t\t  enter destination\t: ";
 	cin>>dest;
-	cout<<endl<<"\tenter cost:\t\t";
+	cout<<endl<<"\t\t  enter cost\t\t: ";
 	cin>>cost;
 
-	get_phno:cout<<endl<<"\tPhno:\t\t";cin>>phno;
+	get_phno:cout<<endl<<"\t\t  Phno  \t\t: ";cin>>phno;
 	valid=1;
 	if(strlen(phno)!=10)
 	   valid=0;
 	else
-	     //for(i=0;i<strlen(phno);i++)
+	     
 	     if(isdigit(phno[1])==0)
 	     {
 	       valid=0;
@@ -109,7 +147,7 @@ void bus::pack(char buffer[])
 	     }
    if(valid==0)
    {
-     cout<<endl<<"\t\tInvalid Phone number"<<endl;
+     cout<<endl<<"Invalid Phone number"<<endl;
      goto get_phno;
    }
 	strcpy(buffer,bid);
@@ -127,6 +165,8 @@ void bus::pack(char buffer[])
 	strcat(buffer,cost);
 	strcat(buffer,"|");
 	strcat(buffer,phno);
+
+
 }
 
 void bus::inser()
@@ -146,13 +186,10 @@ void bus::inser()
 		fp.close();
 		return;
 	}
-    recount++;
+       
+	recount++;
 	strcpy(in[recount].k,bno);
 	in[recount].o=fp.tellg();
-
-	strcpy(sin[recount].sk,pas);
-	strcpy(sin[recount].k,bno);
-
 	fp<<buffer;
 	fp<<endl;
 	memindex temp;
@@ -160,7 +197,7 @@ void bus::inser()
 	{
 		for(j=1;j<recount;j++)
 		{
-			if(strcmpi(in[j].k,in[j+1].k)>0)
+			if(strcmp(in[j].k,in[j+1].k)>0)
 			{
 				strcpy(temp.k,in[j].k);
 				temp.o=in[j].o;
@@ -171,56 +208,42 @@ void bus::inser()
 			}
 		}
 	}
- 	fp.close();
+  
+	fp.close();
 }
-
 void bus::display()
 {	textbackground(BLACK);
-    textcolor(LIGHTMAGENTA);
+  
 	char buffer[100];
 	int i,j;
 	if(recount==0)
 	{
-		cout<<"no records to display"<<endl;
+		cout<<endl<<endl<<"              NO TICKETS RESERVED"<<endl;
 		return;
 	}
-	cout<<"\t.................."<<endl;
+	cout<<"\t............................"<<endl;
 	cout<<"\tprimary index"<<endl;
-	cout<<"\t.................."<<endl;
-	cout<<"\tkey\t"<<"offset"<<endl;
-	cout<<"\t.................."<<endl;
+	cout<<"\t............................"<<endl;
+	cout<<"\tkey\t"<<"          offset"<<endl;
+	cout<<"\t............................"<<endl;
 	for(i=1;i<=recount;i++)
 	{
 		cout<<"\t"<<in[i].k<<"\t"<<in[i].o<<endl;
 	}
 	getch();
-	clrscr();
-	cout<<"\n\n\n\n\n\t----------------------"<<endl;
-	cout<<"\t Secondary index"<<endl;
-	cout<<"\t----------------------"<<endl;
-	cout<<"\t sec-key\t"<<"pri-key"<<endl;
-	cout<<"\t-----------------------"<<endl;
-	for(i=1;i<=recount;i++)
-	{
-	cout<<"\t"<<sin[i].sk<<"\t\t"<<sin[i].k<<endl;
-	}
-	//cout<<"\t------------------------"<<endl;
-
-	getch();
-		cout<<"\n\n\t*******************file contents are********************";
 
 	fp.open(fname,ios::in);
 	for(i=1;i<=recount;i++)
 	{
-		cout<<"\n\t********************************************************\n";
+		cout<<"\n*******************TICKETS RESERVED*********************";
+		cout<<"\n********************************************************\n";
 
 		fp.seekg(in[i].o,ios::beg);
 		fp>>buffer;
-		
-		b.unpack(buffer);
+		unpack(buffer);
 		cout<<endl;
-		cout<< "\t\t\t Press any key ...\n";
-		cout<<"\n\t********************************************************\n\n";
+		cout<< "\n\t\t\t\t Press any key ...\n";
+		cout<<"\n********************************************************\n\n";
 		getch();
 	}
 	fp.close();
@@ -228,49 +251,31 @@ void bus::display()
 void bus::del()
 {
 	char bno[15],buffer[100];
-	int pos,j=0,i,k=0;
+	int pos;
 	fp.open(fname,ios::out|ios::ate);
-	cout<<endl<<"Enter the Booking Id:	";
+
+	cout<<endl<<"Enter the Booking Id:";
 	cin>>bid;
 	pos=search(bid);
-	k=search(sin[1].sk);
 	if(pos==(-1))
 	{
-		cout<<"record not found"<<endl;
-		fp.close();
+		cout<<"Ticket with this booking id not found"<<endl;
 		return;
 	}
 	else
 	{
-		if(recount==1)
-			if(strcmpi(bid,in[k].k)==0)
-				fp.seekg((in[pos].o-2),ios::beg);
-
 		fp.seekg(in[pos].o,ios::beg);
 		fp<<"**********";
+		
 		fp.close();
-
-	}	
-		for(i=pos;i<recount;i++)
+		for(int i=pos;i<recount;i++)
 		{
 			strcpy(in[i].k,in[i+1].k);
 			in[i].o=in[i+1].o;
 		}
-
-		while(strcmpi(sin[j].k,bid)!=0)
-		{
-		j++;
-		}
-
-		for(i=j;i<recount;i++)
-		{
-		strcpy(sin[i].sk,sin[i+1].sk);
-		strcpy(sin[i].k,sin[i+1].k);
-		}
-
-		cout<<"record deleted successfully"<<endl;
+	       cout<<"Your ticket is cancelled successfully.."<<endl;
 		recount--;
-	return;
+	}
 }
 
 
@@ -278,27 +283,27 @@ void bus::unpack(char buffer[])
 {
 
 textbackground(BLACK);
-textcolor(LIGHTMAGENTA);
+
 	char *t;
+	//t=strtok(buffer,"|");
 	t=strtok(buffer,"|");
-	cout<<"		\n\t\tBooking id:		"<<t<<endl;
+	cout<<"		\n\t\tBooking id		: "<<t<<endl;
 	t=strtok(NULL,"|");
-	cout<<"		\n\t\tPassenger name:\t\t"<<t<<endl;
+	cout<<"		\n\t\tPassenger name\t\t: "<<t<<endl;
 	t=strtok(NULL,"|");
-	cout<<"		\n\t\tBus id:			"<<t<<endl;
+	cout<<"		\n\t\tBus id			: "<<t<<endl;
 	t=strtok(NULL,"|");
-	cout<<"		\n\t\tDate:\t\t\t"<<t<<endl;
+	cout<<"		\n\t\tDate\t\t\t: "<<t<<endl;
 	t=strtok(NULL,"|");
-	cout<<"		\n\t\tsource:			"<<t<<endl;
+	cout<<"		\n\t\tsource			: "<<t<<endl;
 	t=strtok(NULL,"|");
-	cout<<"		\n\t\tdestination:		"<<t<<endl;
+	cout<<"		\n\t\tdestination		: "<<t<<endl;
 	t=strtok(NULL,"|");
-	cout<<"		\n\t\tcost:\t\t\t"<<t<<endl;
+	cout<<"		\n\t\tcost\t\t\t: "<<t<<endl;
 	t=strtok(NULL,'\0');
-	cout<<"		\n\t\tphonenumber:		"<<t<<endl;
+	cout<<"		\n\t\tphonenumber		: "<<t<<endl;
 }
 
-//search using binary search
 int bus::search(char bid[])
 {
 	int low=1,high=recount,mid;
@@ -315,253 +320,97 @@ int bus::search(char bid[])
 	return -1;
 }
 
-
 void bus::update()
 {
-
-char buffer[100],buffer1[100],buffer2[100],tem[100],zz[100];
-	int j,k,f,valid=1;
-	char *key,*bi;
-	char upd;
-	cout<<endl<<"	the Enter the bid to update : ";
-	cin>>key;
-	f=b.search(key);
-	
-	//////cout<<q<<"\t"<<q;
-	if(f==(-1))	{cout<<endl<<"     Record not found...!"<<endl; return;}
-	
-
-	else
-	{
-			cout<<endl<<"		Record:";
-			fp.open(fname,ios::in);
-			fp.seekg(in[f].o,ios::beg);
-			fp>>buffer1;
-			strcpy(tem,buffer1);
-			//char *o;
-		//	o=strtok(tem,"|");
-			fp.close();
-			b.unpack(buffer1);
-		    cout<<endl<<"		Confirm permanent updation:[Y/N] ";
-			cin>>upd;
-			if(upd=='Y' || upd=='y')
-			{
-				ud=1;
-				get_pas:
-					cout<<endl<<"\tName of passenger:\t"; cin>>pas;
-					valid=1;
-					for(int i=0;i<strlen(pas);i++)
-					if(isalpha(pas[i])==0)
-					{
-						valid=0;
-						break;
-					}
-				if(valid==0)
-					{cout<<endl<<" INVALID NAME "<<endl;goto get_pas;}
-
-	cout<<endl<<"\tenter Busid:\t\t";
-	cin>>busid;
-	cout<<endl<<"\tenter the date:\t\t";
-	cin>>date;
-	cout<<endl<<"\tenter source:\t\t";
-	cin>>src;
-	cout<<endl<<"\tenter destination:\t";
-	cin>>dest;
-	cout<<endl<<"\tenter cost:\t\t";
-	cin>>cost;
-
-				get_phno:cout<<endl<<"\tPhno:\t\t";cin>>phno;
-					valid=1;
-					if(strlen(phno)!=10)
-					   valid=0;
-					else
-					     for(i=0;i<strlen(phno);i++)
-					     if(isdigit(phno[i])==0)
-					     {
-					       valid=0;
-					       break;
-					     }
-					if(valid==0)
-					{
-					cout<<endl<<"Invalid Phone number"<<endl;
-					goto get_phno;
-					}
-				strcpy(buffer,key);
-				strcat(buffer,"|");
-				strcat(buffer,pas);
-				strcat(buffer,"|");
-				strcat(buffer,busid);
-				strcat(buffer,"|");
-				strcat(buffer,date);
-				strcat(buffer,"|");
-				strcat(buffer,src);
-				strcat(buffer,"|");
-				strcat(buffer,dest);
-				strcat(buffer,"|");
-				strcat(buffer,cost);
-				strcat(buffer,"|");
-				strcat(buffer,phno);
-
-				fp.open(fname,ios::in);
-				fp1.open("out.txt",ios::out);
-
-				while(!fp.eof())
-				{
-
-					fp>>buffer2;
-					strcpy(zz,buffer2);
-					bi=strtok(zz,"|");
-
-
-					//if(strcmpi(sin[i].k,o)==0)
-					if(strcmpi(bi,key)==0)
-					{
-						fp1<<buffer<<"\n";
-						
-						//cout<<endl<<in[i].k<<"\t"<<o<<"\t"<<bi<<"\t"<<sin[i].k<<endl<<endl;
-					}
-					else{
-						
-						//cout<<in[i].k<<"\t"<<o<<endl;
-						fp1<<buffer2<<"\n";
-					}
-					
-				}
-		}	
-	fp.close();                                   	
-	fp1.close();
-	//cout<<recount<<endl;
-	remove(fname);
-	rename("out.txt",fname);
-	}
-	return;
+char bid[15];
+int pos;
+fp.open("inp.txt",ios::out|ios::ate);
+cout<<"Enter the booking id"<<endl;
+cin>>bid;
+pos=search(bid);
+if(pos==-1){
+cout<<"Ticket with this booking id not found\n"<<endl;
+return;
 }
-
-
-void ind()
-{
-	char buffer[100],tem[100],*t,*r;
-	recount=0;
-	//cout<<"\t"<<recount<<endl;
-	fp.open(fname,ios::in|ios::out);
-
-	while(!fp.eof())
-	{
-		recount++;
-		if(recount>1)
-			in[recount].o=(fp.tellg()+2);
-		else
-			in[recount].o=fp.tellg();
-		fp>>buffer;
-		strcpy(tem,buffer);
-		t=strtok(tem,"|");
-		r=strtok(NULL,"|");
-		if(strcmpi("**********",t)==0)
-			recount--;
-		else
-		{	
-			strcpy(in[recount].k,t);
-
-			strcpy(sin[recount].sk,r);
-			strcpy(sin[recount].k,t);
-		}
-	}
-	//cout<<"\t"<<recount<<endl;
-//if(recount>1)
-		recount--;
-	//cout<<"\t"<<recount<<endl;
-	
-	memindex temp;
-	int i,j;
-		for(i=1;i<recount;i++)
-		{
-			for(j=1;j<recount;j++)
-			{
-				if(strcmpi(in[j].k,in[j+1].k)>0)
-				{
-					strcpy(temp.k,in[j].k);
-					temp.o=in[j].o;
-					strcpy(in[j].k,in[j+1].k);
-					in[j].o=in[j+1].o;
-					strcpy(in[j+1].k,temp.k);
-					in[j+1].o=temp.o;
-				}
-			}
-		}
-
-
-
-	fp.close();
-	return;
-} 
-
+fp.seekg(in[pos].o,ios::beg);
+fp<<"**********";
+fp.close();
+for(int i=pos;i<=recount;i++){
+strcpy(in[i].k,in[i+1].k);
+in[i].o=in[i+1].o;
+}
+recount--;
+inser();
+}
 
 int main()
 {
 textbackground(BLACK);
-textcolor(LIGHTMAGENTA);
-char *t,ch;
+
+char *t;
 char bid[15],buffer[100];
-int i,j,k,pos,k1;
+int i,j,k,ch,pos,k1;
+
+fp.open(fname,ios::out|ios::ate);
+getmemindex();
+fp.close();
 char *key;
 clrscr();
-ind();
 
-	for(;;)
-	{	  	
+for(;;)
+{	  clrscr();
+
+	//cout<<recount;
+	  gotoxy(18,2);
+	  cout<<"******************************************";gotoxy(18,4);
+	  cout<<"*";
+	  gotoxy(32,4);
+	  cout<<"MAIN MENU";gotoxy(59,4);cout<<"*";gotoxy(18,6);
+	  cout<<"******************************************";gotoxy(18,8);
+	  cout<<"* 1: Display reserved tickets";gotoxy(59,8);cout<<"*";gotoxy(18,10);
+	  cout<<"* 2: Ticket reservation";gotoxy(59,10);cout<<"*";gotoxy(18,12);
+	  cout<<"* 3: Search reserved ticket ";gotoxy(59,12);cout<<"*";gotoxy(18,14);
+	  cout<<"* 4: Cancel reservation";gotoxy(59,14);cout<<"*";gotoxy(18,16);
+	  cout<<"* 5: Update reservation details";gotoxy(59,16);cout<<"*";gotoxy(18,18);
+	  cout<<"* 6: Quit ";gotoxy(59,18);cout<<"*";gotoxy(18,20);
+	  cout<<"******************************************"<<endl;
+	  cout<<endl<<" 		 Enter choice [1-6] : ";
+	 cin>>ch;
+	 switch(ch)
+	  {
+
+	 case 1:
+	   clrscr();
+	   gotoxy(20,2);
+	   cout<<"******************************************";
+	   gotoxy(20,4);
+	   cout<<"*        DISPLAY RESERVED TICKETS        *";
+	   gotoxy(20,6);
+	   cout<<"******************************************"<<endl<<endl;
+
+	   b.display();
+	   break;
+	 case 2:
+	   clrscr();
+	   gotoxy(22,2);
+	   cout<<"***************************************************";
+	   gotoxy(22,4);
+	   cout<<"*                 TICKET RESERVATION              *";
+	   gotoxy(22,6);
+	   cout<<"***************************************************"<<endl<<endl;
+	   b.inser();
+	   break;
+	 case 3:
 		clrscr();
-		ud=0;
-		gotoxy(18,2);
-		cout<<"******************************************";gotoxy(18,4);
-		cout<<"*";
-		gotoxy(32,4);
-		cout<<"MAIN MENU";gotoxy(59,4);cout<<"*";gotoxy(18,6);
-		cout<<"******************************************";gotoxy(18,8);
-		cout<<"* 1: Display all records";gotoxy(59,8);cout<<"*";gotoxy(18,10);
-		cout<<"* 2: Add record into the file";gotoxy(59,10);cout<<"*";gotoxy(18,12);
-		cout<<"* 3: Search for record ";gotoxy(59,12);cout<<"*";gotoxy(18,14);
-		cout<<"* 4: Delete record";gotoxy(59,14);cout<<"*";gotoxy(18,16);
-		cout<<"* 5: Update record";gotoxy(59,16);cout<<"*";gotoxy(18,18);
-		//cout<<"* 6: Tree structure display";gotoxy(59,18);cout<<"*";gotoxy(18,20);
-		cout<<"* 6: Quit program";//gotoxy(59,20);cout<<"*";
-		gotoxy(18,20);
-		cout<<"******************************************"<<endl;
-		cout<<endl<<" 		 Enter choice [1-6] : ";
-		cin>>ch;
-		switch(ch)
-		{
-
-		 case '1':	clrscr();
-					gotoxy(20,2);
-					cout<<"*******************************************";
-					gotoxy(20,4);
-					cout<<" *  		DISPLAY ALL RECORDS  	*";
-					gotoxy(20,6);
-					cout<<"*******************************************"<<endl<<endl;
-					b.display();
-					break;
-
-		case '2':	clrscr();
-					gotoxy(22,2);
-					cout<<"******************************";
-					gotoxy(22,4);
-					cout<<"*  ADD RECORD INTO THE FILE *";
-					gotoxy(22,6);
-					cout<<"******************************"<<endl<<endl;
-					b.inser();
-					break;
-		case '3':
-					clrscr();
-					gotoxy(22,2);
-					cout<<"************************************";
-					gotoxy(22,4);
-					cout<<"*	  	     SEARCH   		     *";
-					gotoxy(22,6);
-					cout<<"************************************"<<endl<<endl;
-					gotoxy(24,8);
-					cout<<"\n*\t1.\tSearch using Bus Registration number\t*\n";
-					cout<<"\n*\t2.\tSearch using name of the Passenger\t*\n";
-					cout<<"\n*\t3.\tSearch using source and destination\t*\n";
+		gotoxy(22,2);
+		cout<<"*********************************";
+		gotoxy(22,4);
+		cout<<"*        SEARCH RESERVATION     *";
+		gotoxy(22,6);
+		cout<<"*********************************"<<endl<<endl;
+		cout<<"\n\t*\t1.\tSearch using Bus Registration number\t\t*\n";
+					cout<<"\n\t*\t2.\tSearch using name of the Passenger\t\t*\n";
+					cout<<"\n\t*\t3.\tSearch using source and destination\t\t*\n";
 					cout<<"\n\n\tEnter the Required option:\t";
 					char opt;
 					cin>>opt;
@@ -582,18 +431,30 @@ ind();
 								break;
 
 						case '2':int f1=0;
+						char *n2;
 								cout<<endl<<"\n\t\tEnter the name to search : ";
 								cin>>key;
 								fp.open(fname,ios::in);
-								for(i=1;i<=recount;i++)
+								//for(i=1;i<=recount;i++)
+								strcpy(buffer,"aa");
+
+								while(!strcmp(buffer,"\0")==0)
 								{
-									if(strcmpi(sin[i].sk,key)==0)
+									char *n,buf[100];
+									fp>>buffer;
+									strcpy(buf,buffer);
+									n2=strtok(buf,"|");
+									n=strtok(NULL,"|");
+									if(strcmpi(n,key)==0)
 									{
 										f1=1;
-										int kk=b.search(sin[i].k);
+										int kk=b.search(n2);
+										//cout<<kk;
 										fp.seekg(in[kk].o,ios::beg);
 										fp>>buffer;
 										b.unpack(buffer);
+										getch();
+										break;
 									}
 
 								}
@@ -611,7 +472,10 @@ ind();
 							    cout<<"\n\t*\tEnter destination:	";
 								cin>>d;
 								fp.open(fname,ios::in);
-								for(i=1;i<=recount;i++)
+							//for(i=1;i<=recount;i++)
+								strcpy(buffer,"aa");
+
+								while(!strcmp(buffer,"\0")==0)
 								{
 									fp>>buffer;
 									strcpy(tem,buffer);
@@ -629,6 +493,7 @@ ind();
 										cout<<"\n\tfounded passengers int this way are:\n\n";
 										b.unpack(buffer);
 										found=1;
+										getch();
 									}
 								      
 								}
@@ -637,41 +502,37 @@ ind();
 								    break;
 					}
 					break;
-		 case '4':
-			clrscr();
-			gotoxy(28,2);
-			cout<<"*******************";
-			gotoxy(28,4);
-			cout<<"*	DELETE RECORD  *";
-			gotoxy(28,6);
-			cout<<"*******************"<<endl<<endl;
-			b.del();
-			ind();
-			break;
-		case '5':
-			clrscr();
-			gotoxy(28,2);
-			cout<<"*******************";
-			gotoxy(28,4);
-			cout<<"*  UPDATE RECORD  *";
-			gotoxy(28,6);
-			cout<<"*******************"<<endl<<endl;
-			b.update();
-			if(ud==1)
-				ind();
-			break;
+	 case 4:
+		clrscr();
+		gotoxy(28,2);
+		cout<<"*******************************";
+		gotoxy(28,4);
+		cout<<"*       CANCEL RESERVATION    *";
+		gotoxy(28,6);
+		cout<<"*******************************"<<endl<<endl;
+		b.del();
+		break;
+	case 5:
+		clrscr();
+		gotoxy(28,2);
+		cout<<"********************";
+		gotoxy(28,4);
+		cout<<"*  UPDATE DETAILS  *";
+		gotoxy(28,6);
+		cout<<"********************"<<endl<<endl;
+		b.update();
+		break;
 
-		case '6':
-		   exit(0);
-		   break;
-		   case '8':ind();
-		   getch();
-		   break;
-		 default:	cout<<endl<< "		!!! Invalid Choice. Press any key ... !!!";
-		 getch();
-		}
-			if(ch>1 && ch<7)
-			cout << "\n\n\t Press any key to return to menu ... ";
-			getch();
+	 default:uploadrecount(recount);
+setmemindex();
+fp.close();
+exit(0);
+
+cout<<endl<< "		!!! Invalid Choice. Press any key ... !!!";
+	   }
+
+		if(ch>1 && ch<7)
+		cout << "\n\n\t Press any key to return to menu ... ";
+		getch();
 	}
 }
